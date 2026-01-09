@@ -9,47 +9,86 @@
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/862/862856.png">
     
     <style>
-        :root { --primary: #2E7D32; --bg: #f4f4f4; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; }
+        :root { --primary: #2E7D32; --bg: #e0e0e0; }
         
-        /* Cabecera */
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            display: flex;
+            justify-content: center; /* Centrar en PC */
+            min-height: 100vh;
+        }
+
+        /* Esto crea la forma de celular en PC */
+        .mobile-wrapper {
+            width: 100%;
+            max-width: 450px; /* Ancho máximo limitado */
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 25px rgba(0,0,0,0.15);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+
         h1 { margin: 0; font-size: 1.2rem; }
         
-        /* Contenedor de Tarjetas */
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .container { 
+            padding: 15px; 
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 50px;
+        }
         
-        /* Tarjeta de Producto */
-        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
-        .card-img { width: 100%; height: 150px; object-fit: cover; background: #eee; }
-        .card-body { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
-        
-        .price { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 4px; }
-        .product { font-weight: 600; margin: 0 0 5px 0; font-size: 1rem; line-height: 1.2; color: #333; }
-        .farmer { font-size: 0.85rem; color: #666; margin-bottom: 12px; display: flex; align-items: center; gap: 4px; }
-        
-        /* Botón WhatsApp */
-        .btn { background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; display: block; margin-top: auto; font-size: 0.9rem; border: none; width: 100%; box-sizing: border-box; }
-        .btn:hover { background: #1ebe57; }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            border: 1px solid #f0f0f0;
+        }
 
-        .loading { text-align: center; padding: 40px; color: #666; grid-column: 1 / -1; }
+        .card-img { width: 100%; height: 220px; object-fit: cover; background: #eee; }
+        .card-body { padding: 15px; }
+        
+        .price { color: var(--primary); font-weight: 800; font-size: 1.4rem; margin-bottom: 5px; }
+        .product { font-weight: 600; font-size: 1.1rem; color: #222; margin-bottom: 5px; line-height: 1.3; }
+        .farmer { font-size: 0.9rem; color: #666; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
+        .btn { background: #25D366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; text-align: center; font-weight: bold; display: block; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
+        .btn:active { transform: scale(0.98); }
+
+        .loading { text-align: center; padding: 40px; color: #888; margin-top: 50px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>🥦 Feria Digital Viernes</h1>
-</header>
+<div class="mobile-wrapper">
+    <header>
+        <h1>🥦 Feria Digital Viernes</h1>
+    </header>
 
-<div class="container" id="app">
-    <div class="loading">Cargando productos del campo... ⏳</div>
+    <div class="container" id="app">
+        <div class="loading">Cargando la feria... ⏳</div>
+    </div>
 </div>
 
 <script>
-    // --- ⚠️ PEGA TU ENLACE AQUÍ ABAJO ENTRE LAS COMILLAS ⚠️ ---
+    // --- ⬇️ PEGA TU ENLACE CSV AQUÍ (NO OLVIDES ESTO) ⬇️ ---
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRoqVSEYMGwKzeTQalBvL7CkTxp-4TC43rjI1iUaAu1bwpSByacXeHR62rM86Rv_na4L_Z8tRX7Mr0w/pub?output=csv"; 
-    // -----------------------------------------------------------
+    // -------------------------------------------------------
 
     async function init() {
         try {
@@ -59,7 +98,7 @@
             render(rows);
         } catch (e) {
             console.error(e);
-            document.getElementById('app').innerHTML = '<p style="text-align:center; padding:20px;">Error cargando datos.<br>Revisa que el enlace CSV sea público.</p>';
+            document.getElementById('app').innerHTML = '<div style="text-align:center; padding:40px">⚠️<br>Error cargando datos.<br>Verifica el enlace CSV.</div>';
         }
     }
 
@@ -70,7 +109,6 @@
         
         for (let i = 1; i < lines.length; i++) {
             if (!lines[i]) continue;
-            // Regex para separar por comas pero ignorar las comas dentro de comillas (ej: "Papa, amarilla")
             const matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
             if (!matches) continue;
 
@@ -86,10 +124,10 @@
 
     function render(products) {
         const app = document.getElementById('app');
-        app.innerHTML = ''; // Limpiar loading
+        app.innerHTML = ''; 
 
         if(products.length === 0) {
-            app.innerHTML = '<p style="text-align:center; width:100%">No hay productos disponibles hoy.</p>';
+            app.innerHTML = '<p style="text-align:center; padding:20px">No hay productos.</p>';
             return;
         }
 
@@ -99,31 +137,26 @@
             const card = document.createElement('div');
             card.className = 'card';
             
-            // Construir mensaje de WhatsApp
             const msg = `Hola ${p.Agricultor}, vi su *${p.Producto}* en la Feria Digital y quiero comprar.`;
             const waLink = `https://wa.me/51${p.Telefono}?text=${encodeURIComponent(msg)}`;
-
-            // Imagen por defecto si falla o está vacía
-            const imgUrl = p.Foto && p.Foto.length > 5 ? p.Foto : 'https://via.placeholder.com/300x200?text=Sin+Foto';
+            const imgUrl = p.Foto && p.Foto.length > 5 ? p.Foto : 'https://via.placeholder.com/400x300?text=Foto+Referencial';
 
             card.innerHTML = `
-                <img src="${imgUrl}" class="card-img" alt="${p.Producto}" onerror="this.src='https://via.placeholder.com/300x200?text=Foto+No+Disponible'">
+                <img src="${imgUrl}" class="card-img" alt="${p.Producto}" onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Foto'">
                 <div class="card-body">
                     <div class="product">${p.Producto}</div>
                     <div class="price">${p.Precio}</div>
-                    <div class="farmer">🧑‍🌾 ${p.Agricultor}</div>
+                    <div class="farmer">👨‍🌾 ${p.Agricultor}</div>
                     <a href="${waLink}" class="btn" target="_blank">🟢 Pedir por WhatsApp</a>
                 </div>
             `;
             app.appendChild(card);
         });
     }
-
-    // Registrar Service Worker para que sea instalable
+    
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
     }
-
     init();
 </script>
 </body>
