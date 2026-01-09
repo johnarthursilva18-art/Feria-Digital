@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feria Digital</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2E7D32">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/862/862856.png">
+    
+    <style>
+        :root { --primary: #2E7D32; --bg: #f4f4f4; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; }
+        
+        /* Cabecera */
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        h1 { margin: 0; font-size: 1.2rem; }
+        
+        /* Contenedor de Tarjetas */
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 15px; max-width: 800px; margin: 0 auto; }
+        
+        /* Tarjeta de Producto */
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; transition: transform 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .card-img { width: 100%; height: 150px; object-fit: cover; background: #eee; }
+        .card-body { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        .price { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 4px; }
+        .product { font-weight: 600; margin: 0 0 5px 0; font-size: 1rem; line-height: 1.2; color: #333; }
+        .farmer { font-size: 0.85rem; color: #666; margin-bottom: 12px; display: flex; align-items: center; gap: 4px; }
+        
+        /* Botón WhatsApp */
+        .btn { background: #25D366; color: white; text-decoration: none; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; display: block; margin-top: auto; font-size: 0.9rem; border: none; width: 100%; box-sizing: border-box; }
+        .btn:hover { background: #1ebe57; }
+
+        .loading { text-align: center; padding: 40px; color: #666; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🥦 Feria Digital Viernes</h1>
+</header>
+
+<div class="container" id="app">
+    <div class="loading">Cargando productos del campo... ⏳</div>
+</div>
+
+<script>
+    // --- ⚠️ PEGA TU ENLACE AQUÍ ABAJO ENTRE LAS COMILLAS ⚠️ ---
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/12qSeDf4sfGSWBGkngw7912b8EbV0WS1VTky2TgTBOsY/edit?usp=sharing"; 
+    // -----------------------------------------------------------
+
+    async function init() {
+        try {
+            const response = await fetch(SHEET_URL);
+            const data = await response.text();
+            const rows = csvToJSON(data);
+            render(rows);
+        } catch (e) {
+            console.error(e);
+            document.getElementById('app').innerHTML = '<p style="text-align:center; padding:20px;">Error cargando datos.<br>Revisa que el enlace CSV sea público.</p>';
+        }
+    }
+
+    function csvToJSON(csv) {
+        const lines = csv.split("\n");
+        const result = [];
+        const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ''));
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i]) continue;
+            // Regex para separar por comas pero ignorar las comas dentro de comillas (ej: "Papa, amarilla")
+            const matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            if (!matches) continue;
+
+            const obj = {};
+            headers.forEach((header, j) => {
+                let val = matches[j] ? matches[j].replace(/"/g, '').trim() : "";
+                obj[header] = val;
+            });
+            result.push(obj);
+        }
+        return result;
+    }
+
+    function render(products) {
+        const app = document.getElementById('app');
+        app.innerHTML = ''; // Limpiar loading
+
+        if(products.length === 0) {
+            app.innerHTML = '<p style="text-align:center; width:100%">No hay productos disponibles hoy.</p>';
+            return;
+        }
+
+        products.forEach(p => {
+            if(!p.Producto) return; 
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Construir mensaje de WhatsApp
+            const msg = `Hola ${p.Agricultor}, vi su *${p.Producto}* en la Feria Digital y quiero comprar.`;
+            const waLink = `https://wa.me/51${p.Telefono}?text=${encodeURIComponent(msg)}`;
+
+            // Imagen por defecto si falla o está vacía
+            const imgUrl = p.Foto && p.Foto.length > 5 ? p.Foto : 'https://via.placeholder.com/300x200?text=Sin+Foto';
+
+            card.innerHTML = `
+                <img src="${imgUrl}" class="card-img" alt="${p.Producto}" onerror="this.src='https://via.placeholder.com/300x200?text=Foto+No+Disponible'">
+                <div class="card-body">
+                    <div class="product">${p.Producto}</div>
+                    <div class="price">${p.Precio}</div>
+                    <div class="farmer">🧑‍🌾 ${p.Agricultor}</div>
+                    <a href="${waLink}" class="btn" target="_blank">🟢 Pedir por WhatsApp</a>
+                </div>
+            `;
+            app.appendChild(card);
+        });
+    }
+
+    // Registrar Service Worker para que sea instalable
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    init();
+</script>
+</body>
+</html>
